@@ -1,0 +1,14 @@
+{
+  "name": "Lightspeed",
+  "slug": "lightspeed",
+  "category": "AI",
+  "repository": {
+    "url": "https://github.com/lightspeedfoundation/CLI-Templates.git"
+  },
+  "projectXHandle": "@lightspeed_coin",
+  "description": "This is only the beginning",
+  "tags": [
+    "opensource development"
+  ],
+  "createdAt": "2025-08-07T22:36:39.404Z"
+}
