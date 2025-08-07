@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const inquirer = require('inquirer');
+// inquirer is ESM; import dynamically inside promptUser
 const colors = require('yoctocolors-cjs');
 const { execSync } = require('child_process');
 const simpleGit = require('simple-git');
@@ -32,6 +32,7 @@ function loadSchema() {
 
 async function promptUser() {
   console.log(colors.cyan('\nCLI-Templates Submission Wizard\n'));
+  const { default: inquirer } = await import('inquirer');
   const answers = await inquirer.prompt([
     {
       type: 'list',
