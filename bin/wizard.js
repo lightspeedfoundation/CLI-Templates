@@ -5,6 +5,10 @@ const path = require('path');
 const crypto = require('crypto');
 // inquirer is ESM; import dynamically inside promptUser
 const colors = require('yoctocolors-cjs');
+const boxen = require('boxen');
+const figlet = require('figlet');
+const gradient = require('gradient-string');
+const ora = require('ora');
 const { execSync } = require('child_process');
 const simpleGit = require('simple-git');
 
@@ -31,67 +35,77 @@ function loadSchema() {
 }
 
 async function promptUser() {
-  console.log(colors.cyan('\nCLI-Templates Submission Wizard\n'));
+  // Fancy header
+  const title = figlet.textSync('CLI Templates', { horizontalLayout: 'full' });
+  console.log(gradient.atlas.multiline(title));
+  console.log(boxen(gradient.cristal('Community Template Submission'), { padding: 1, borderColor: 'cyan', borderStyle: 'round' }));
   const { default: inquirer } = await import('inquirer');
   const answers = await inquirer.prompt([
     {
       type: 'list',
       name: 'category',
-      message: 'Category:',
+      message: 'Pick a category',
       choices: ['AI', 'App', 'Bot', 'Game']
     },
     {
       type: 'input',
       name: 'repoUrl',
-      message: 'Repository URL:',
-      validate: (v) => /^(https?:\/\/|git@).+\.git$/.test(v) || 'Enter a valid Git URL ending with .git'
+      message: 'Template repository (git URL ending with .git)',
+      validate: (v) => /^(https?:\/\/|git@).+\.git$/.test(v) || 'Please enter a valid Git URL ending with .git'
     },
     {
       type: 'input',
       name: 'branch',
-      message: 'Branch (optional):',
+      message: 'Default branch or tag (optional)',
       default: ''
     },
     {
       type: 'input',
       name: 'projectX',
-      message: 'Project X handle (e.g., @yourhandle):',
-      validate: (v) => v && v.trim().length > 0 || 'Handle is required'
+      message: 'Project X handle (e.g., @yourhandle)',
+      validate: (v) => /^@?[A-Za-z0-9_\.]+$/.test(v.trim()) || 'Enter a simple handle like @lightspeed_coin'
     },
     {
       type: 'input',
       name: 'name',
-      message: 'Template name (short):',
-      validate: (v) => v && v.trim().length > 0 || 'Name is required'
+      message: 'Template name',
+      validate: (v) => v && v.trim().length > 1 || 'Please enter a short name'
     },
     {
       type: 'input',
       name: 'description',
-      message: 'Brief description (optional):',
+      message: 'One-line description (optional)',
       default: ''
     },
     {
       type: 'input',
       name: 'tags',
-      message: 'Tags (comma-separated, optional):',
+      message: 'Tags (comma-separated, optional)',
       filter: (v) => v.split(',').map((s) => s.trim()).filter(Boolean)
     },
     {
       type: 'confirm',
       name: 'confirmGPL',
-      message: 'If you have completed your template and it is properly licensed under GPL v3, submit your pull request to be listed. Do you confirm your template is GPL-3.0 licensed?',
+      message: 'Confirm your template repository is GPL-3.0 licensed',
       default: true
     },
     {
       type: 'confirm',
       name: 'noPlagiarism',
-      message: 'Note: Do not submit pull requests directly copying other people\'s work. Direct plagiarism will not be accepted. Do you confirm this is your original work?',
+      message: 'Confirm this is your original work (no direct copying)',
+      default: true
+    },
+    // Review step
+    {
+      type: 'confirm',
+      name: 'confirmReview',
+      message: 'Review your answers on screen. Continue?',
       default: true
     },
     {
       type: 'confirm',
       name: 'submitPr',
-      message: 'Would you like to submit a pull request to be listed from this wizard?',
+      message: 'Open a pull request now (requires GitHub CLI auth)?',
       default: true
     }
   ]);
@@ -168,9 +182,14 @@ function tryGhPrCreate(branchName, title, body) {
 async function main() {
   try {
     const answers = await promptUser();
+    if (!answers.confirmReview) {
+      console.log(colors.yellow('Cancelled. Rerun `npm run wizard` to start over.'));
+      return;
+    }
     const { entry, filename } = buildEntry(answers);
+    const spinner = ora({ text: 'Creating entry...', spinner: 'dots12' }).start();
     const filePath = writeEntryFile(entry, filename);
-    console.log(colors.green(`\nCreated entry: ${path.relative(process.cwd(), filePath)}`));
+    spinner.succeed(colors.green(`Created entry: ${path.relative(process.cwd(), filePath)}`));
 
     // Validate against schema (best-effort; CI will also validate)
     try {
