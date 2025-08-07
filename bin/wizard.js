@@ -5,10 +5,17 @@ const path = require('path');
 const crypto = require('crypto');
 // inquirer is ESM; import dynamically inside promptUser
 const colors = require('yoctocolors-cjs');
-const boxen = require('boxen');
 const figlet = require('figlet');
 const gradient = require('gradient-string');
-const ora = require('ora');
+
+function renderBox(text) {
+  const lines = String(text).split('\n');
+  const width = Math.max(...lines.map((l) => l.length));
+  const top = `╭${'─'.repeat(width + 2)}╮`;
+  const mid = lines.map((l) => `│ ${l.padEnd(width, ' ')} │`);
+  const bot = `╰${'─'.repeat(width + 2)}╯`;
+  return [top, ...mid, bot].join('\n');
+}
 const { execSync } = require('child_process');
 const simpleGit = require('simple-git');
 
@@ -38,7 +45,7 @@ async function promptUser() {
   // Fancy header
   const title = figlet.textSync('CLI Templates', { horizontalLayout: 'full' });
   console.log(gradient.atlas.multiline(title));
-  console.log(boxen(gradient.cristal('Community Template Submission'), { padding: 1, borderColor: 'cyan', borderStyle: 'round' }));
+  console.log(renderBox(gradient.cristal('Community Template Submission')));
   const { default: inquirer } = await import('inquirer');
   const answers = await inquirer.prompt([
     {
@@ -187,6 +194,7 @@ async function main() {
       return;
     }
     const { entry, filename } = buildEntry(answers);
+    const { default: ora } = await import('ora');
     const spinner = ora({ text: 'Creating entry...', spinner: 'dots12' }).start();
     const filePath = writeEntryFile(entry, filename);
     spinner.succeed(colors.green(`Created entry: ${path.relative(process.cwd(), filePath)}`));
