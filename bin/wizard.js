@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const inquirer = require('inquirer');
-const chalk = require('chalk');
+const colors = require('yoctocolors-cjs');
 const { execSync } = require('child_process');
 const simpleGit = require('simple-git');
 
@@ -31,7 +31,7 @@ function loadSchema() {
 }
 
 async function promptUser() {
-  console.log(chalk.cyan('\nCLI-Templates Submission Wizard\n'));
+  console.log(colors.cyan('\nCLI-Templates Submission Wizard\n'));
   const answers = await inquirer.prompt([
     {
       type: 'list',
@@ -144,7 +144,7 @@ function tryGhPrCreate(branchName, title, body) {
   try {
     execSync('gh --version', { stdio: 'ignore' });
   } catch (_) {
-    console.log(chalk.yellow('GitHub CLI not detected. Skipping automatic PR creation.'));
+    console.log(colors.yellow('GitHub CLI not detected. Skipping automatic PR creation.'));
     return false;
   }
   try {
@@ -152,14 +152,14 @@ function tryGhPrCreate(branchName, title, body) {
     try {
       execSync(`git push --set-upstream origin ${branchName}`, { stdio: 'inherit' });
     } catch (_) {
-      console.log(chalk.yellow('Direct push to origin failed. If this is not your fork, use a fork to open a PR.'));
+      console.log(colors.yellow('Direct push to origin failed. If this is not your fork, use a fork to open a PR.'));
     }
     // Attempt PR create using current repo context
     const prCmd = `gh pr create --title "${title}" --body "${body}" --base ${DEFAULT_BASE_BRANCH}`;
     execSync(prCmd, { stdio: 'inherit' });
     return true;
   } catch (err) {
-    console.log(chalk.yellow('Automatic PR creation failed. You can open a PR manually using the instructions below.'));
+    console.log(colors.yellow('Automatic PR creation failed. You can open a PR manually using the instructions below.'));
     return false;
   }
 }
@@ -169,7 +169,7 @@ async function main() {
     const answers = await promptUser();
     const { entry, filename } = buildEntry(answers);
     const filePath = writeEntryFile(entry, filename);
-    console.log(chalk.green(`\nCreated entry: ${path.relative(process.cwd(), filePath)}`));
+    console.log(colors.green(`\nCreated entry: ${path.relative(process.cwd(), filePath)}`));
 
     // Validate against schema (best-effort; CI will also validate)
     try {
@@ -179,18 +179,18 @@ async function main() {
       const validate = ajv.compile(schema);
       const valid = validate(entry);
       if (!valid) {
-        console.log(chalk.red('Schema validation errors:'));
+        console.log(colors.red('Schema validation errors:'));
         console.log(validate.errors);
         process.exitCode = 1;
       } else {
-        console.log(chalk.green('Entry passed local schema validation.'));
+        console.log(colors.green('Entry passed local schema validation.'));
       }
     } catch (e) {
-      console.log(chalk.yellow('Validation skipped (local validator error). CI will validate your entry.'));
+      console.log(colors.yellow('Validation skipped (local validator error). CI will validate your entry.'));
     }
 
     const branchName = await gitCommitAndBranch(filePath, entry.slug);
-    console.log(chalk.green(`\nCreated branch: ${branchName}`));
+    console.log(colors.green(`\nCreated branch: ${branchName}`));
 
     if (answers.submitPr) {
       const title = `Add template: ${entry.name} (${entry.slug})`;
@@ -216,9 +216,9 @@ async function main() {
       console.log(`git push --set-upstream origin ${branchName}`);
     }
 
-    console.log(chalk.cyan('\nThank you for contributing to CLI-Templates!'));
+    console.log(colors.cyan('\nThank you for contributing to CLI-Templates!'));
   } catch (err) {
-    console.error(chalk.red(`Error: ${err.message}`));
+    console.error(colors.red(`Error: ${err.message}`));
     process.exit(1);
   }
 }
