@@ -7,15 +7,6 @@ const crypto = require('crypto');
 const colors = require('yoctocolors-cjs');
 const figlet = require('figlet');
 const gradient = require('gradient-string');
-
-function renderBox(text) {
-  const lines = String(text).split('\n');
-  const width = Math.max(...lines.map((l) => l.length));
-  const top = `╭${'─'.repeat(width + 2)}╮`;
-  const mid = lines.map((l) => `│ ${l.padEnd(width, ' ')} │`);
-  const bot = `╰${'─'.repeat(width + 2)}╯`;
-  return [top, ...mid, bot].join('\n');
-}
 const { execSync } = require('child_process');
 const simpleGit = require('simple-git');
 
@@ -45,7 +36,7 @@ async function promptUser() {
   // Fancy header
   const title = figlet.textSync('CLI Templates', { horizontalLayout: 'full' });
   console.log(gradient.atlas.multiline(title));
-  console.log(renderBox(gradient.cristal('Community Template Submission')));
+  console.log(colors.blueBright('» Community Template Submission «'));
   const { default: inquirer } = await import('inquirer');
   const answers = await inquirer.prompt([
     {
